@@ -17,50 +17,62 @@ namespace Player
         [Header("References")]
         [SerializeField] private Transform _cameraTransform;
         [SerializeField] private DeviceUIManager _deviceUIManager;
-
-        private CustomJoystick movementJoystick;
-        private CustomJoystick lookJoystick;
-        private CharacterController characterController;
-        private Vector2 moveInput;
-        private Vector2 lookInput;
+        [SerializeField] private GameScreenManager _gameScreenManager;
+        
+        [SerializeField] private CustomJoystick _movementJoystick;
+        private CustomJoystick _lookJoystick;
+        private CharacterController _characterController;
+        private Vector2 _moveInput;
+        private Vector2 _lookInput;
 
         private float verticalVelocity;
         private float cameraRotationX;
 
-        private bool isMobile;
+        private bool _isMobile;
 
-        private PlayerInput playerInput;
+        private PlayerInput _playerInput;
+        private UnityEngine.UI.Button _jumpButton;
 
         private void Awake()
         {
-            characterController = GetComponent<CharacterController>();
-            playerInput = new PlayerInput();
+            _characterController = GetComponent<CharacterController>();
+            _playerInput = new PlayerInput();
             
-            playerInput.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
-            playerInput.Player.Move.canceled += ctx => moveInput = Vector2.zero;
-            playerInput.Player.Look.performed += ctx => lookInput = ctx.ReadValue<Vector2>();
-            playerInput.Player.Look.canceled += ctx => lookInput = Vector2.zero;
-            playerInput.Player.Jump.performed += ctx => OnJumpButton();
+            _playerInput.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
+            _playerInput.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
+            _playerInput.Player.Look.performed += ctx => _lookInput = ctx.ReadValue<Vector2>();
+            _playerInput.Player.Look.canceled += ctx => _lookInput = Vector2.zero;
+            _playerInput.Player.Jump.performed += ctx => OnJumpButton();
+            _playerInput.Player.Pause.performed += _ => TogglePause();
 
-            isMobile = _deviceUIManager.IsMobileUIActive;
-
-            if (isMobile)
-                SetJoysticks();
-            
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            _isMobile = _deviceUIManager.IsMobileUIActive;
         }
 
         private void OnEnable()
         {
-            playerInput.Enable();
-            _deviceUIManager.OnOrientationChanged += DeviceUIManagerOnOnOrientationChanged;
+            _playerInput.Enable();
+            _deviceUIManager.SetActiveConfig += DeviceUIManagerOnSetActiveConfig;
         }
 
         private void OnDisable()
         {
-            playerInput.Disable();
-            _deviceUIManager.OnOrientationChanged -= DeviceUIManagerOnOnOrientationChanged;
+            _playerInput.Disable();
+            _deviceUIManager.SetActiveConfig -= DeviceUIManagerOnSetActiveConfig;
+        }
+
+        private void Start()
+        {
+            _isMobile = _deviceUIManager.IsMobileUIActive;
+
+            if (_isMobile)
+            {
+                SetUIButtons();
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;   
+            }
         }
 
         private void Update()
@@ -70,29 +82,47 @@ namespace Player
             HandleGravity();
         }
         
-        private void DeviceUIManagerOnOnOrientationChanged()
+        private void DeviceUIManagerOnSetActiveConfig()
         {
-            SetJoysticks();
+            if (_isMobile)
+                SetUIButtons();
         }
         
-        private void SetJoysticks()
+        private void TogglePause()
+        {
+            if (Time.timeScale == 0)
+            {
+                Time.timeScale = 1;
+                _gameScreenManager.ShowGameplayScreen();
+            }
+            else
+            {
+                Time.timeScale = 0;
+                _gameScreenManager.ShowPauseScreen();
+            }
+        }
+        
+        private void SetUIButtons()
         {
             if (_deviceUIManager.GetActiveUIConfiguration() is not MobileUIConfigurationStats mobileConfig) 
                 return;
             
-            movementJoystick = mobileConfig.MovementJoystick;
-            lookJoystick = mobileConfig.LookJoystick;
+            _movementJoystick = mobileConfig.MovementJoystick;
+            _lookJoystick = mobileConfig.LookJoystick;
+            _jumpButton = mobileConfig.JumpButton;
+            
+            _jumpButton.onClick.AddListener(OnJumpButton);
         }
 
         private void HandleMovement()
         {
             Vector3 moveDirection;
-            if (isMobile)
-                moveDirection = transform.forward * movementJoystick.Vertical + transform.right * movementJoystick.Horizontal;
+            if (_isMobile)
+                moveDirection = transform.forward * _movementJoystick.Vertical + transform.right * _movementJoystick.Horizontal;
             else
-                moveDirection = transform.forward * moveInput.y + transform.right * moveInput.x;
+                moveDirection = transform.forward * _moveInput.y + transform.right * _moveInput.x;
 
-            characterController.Move(moveDirection * (_walkSpeed * Time.deltaTime));
+            _characterController.Move(moveDirection * (_walkSpeed * Time.deltaTime));
         }
 
         private void HandleLook()
@@ -100,15 +130,15 @@ namespace Player
             float lookX;
             float lookY;
 
-            if (isMobile)
+            if (_isMobile)
             {
-                lookX = lookJoystick.Horizontal * _lookSensitivity;
-                lookY = lookJoystick.Vertical * _lookSensitivity;
+                lookX = _lookJoystick.Horizontal * _lookSensitivity;
+                lookY = _lookJoystick.Vertical * _lookSensitivity;
             }
             else
             {
-                lookX = lookInput.x * _lookSensitivity;
-                lookY = lookInput.y * _lookSensitivity;
+                lookX = _lookInput.x * _lookSensitivity;
+                lookY = _lookInput.y * _lookSensitivity;
             }
 
             transform.Rotate(Vector3.up, lookX);
@@ -120,7 +150,7 @@ namespace Player
 
         private void HandleGravity()
         {
-            if (characterController.isGrounded)
+            if (_characterController.isGrounded)
             {
                 if (verticalVelocity < 0)
                 {
@@ -132,13 +162,19 @@ namespace Player
                 verticalVelocity += _gravity * Time.deltaTime;
             }
 
-            characterController.Move(Vector3.up * (verticalVelocity * Time.deltaTime));
+            _characterController.Move(Vector3.up * (verticalVelocity * Time.deltaTime));
         }
 
         public void OnJumpButton()
         {
-            if (characterController.isGrounded)
+            if (_characterController.isGrounded)
                 verticalVelocity = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+        }
+        
+        private void OnDestroy()
+        {
+            if (_jumpButton != null)
+                _jumpButton.onClick.RemoveListener(OnJumpButton);
         }
     }
 }

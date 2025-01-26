@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using Game;
+using UnityEngine;
 using TMPro;
 
 namespace Timers
@@ -11,24 +13,23 @@ namespace Timers
 
         [Header("UI Settings")]
         [SerializeField] private TextMeshProUGUI _timerText;
-
+        
         private int _currentTime;
         private float _internalTimer;
         private bool _isRunning;
 
+        public event Action TimeISOut;
+
         private void Start()
         {
-            _currentTime = _startTimeValue;
-            _isRunning = true;
-            
-            UpdateTimerUI();
             StartTimer();
+            UpdateTimerUI();
         }
 
         private void Update()
         {
-            /*if (!_isRunning || _currentTime <= 0 || ) 
-                return;*/
+            if (!_isRunning || _currentTime <= 0) 
+                return;
             
             _internalTimer += Time.deltaTime;
             
@@ -40,13 +41,26 @@ namespace Timers
                 UpdateTimerUI();
             }
 
-            /*if (_currentTime <= 0)
-                OnGameOver();*/
+            if (_currentTime <= 0)
+                OnGameOver();
         }
+
+        public void Initialize(GameState gameState)
+        {
+            if (gameState.GetCurrentTime() != 0)
+                _currentTime = gameState.GetCurrentTime();
+            
+            UpdateTimerUI();
+        }
+
+        public int GetCurrentTime()
+            => _currentTime;
 
         private void StartTimer()
         {
-            _currentTime = _startTimeValue;
+            if (_currentTime == 0)
+                _currentTime = _startTimeValue;
+            
             _isRunning = true;
         }
 
@@ -59,7 +73,7 @@ namespace Timers
         private void OnGameOver()
         {
             _isRunning = false;
-            Debug.Log("Game Over! Time's up!");
+            TimeISOut?.Invoke();
         }
 
         private void UpdateTimerUI()

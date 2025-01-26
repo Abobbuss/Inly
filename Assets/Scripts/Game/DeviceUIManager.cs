@@ -5,54 +5,69 @@ namespace Game
 {
     public class DeviceUIManager : MonoBehaviour
     {
-        [Header("UI Elements")]
-        [SerializeField] private GameObject pcUI;
-        [SerializeField] private GameObject mobileUI;
-        
-        [Header("UI Configurations")]
-        [SerializeField] private UIConfigurationStats pcUIConfig;
-        [SerializeField] private MobileUIConfigurationStats mobilePortraitUIConfig;
-        [SerializeField] private MobileUIConfigurationStats mobileLandscapeUIConfig;
+        [SerializeField] private GameScreenManager _gameScreenManager;
+        [SerializeField] private GameState _gameState;
         
         [Header("Debug Settings")] 
         [SerializeField] private bool forceMobileUIInEditor;
 
+        private GameObject _pcUI;
+        private GameObject _mobileUI;
         private UIConfigurationStats _activeUIConfig;
-        private ScreenOrientation _currentOrientation;
-        
-        public event Action OnOrientationChanged;
+        private UIConfigurationStats _pcUIConfig;
+        private MobileUIConfigurationStats _mobileUIConfig;
+
+        public event Action SetActiveConfig;
         
         public bool IsMobileUIActive { get; private set; }
 
-        private void Awake()
+        private void OnEnable()
+        {
+            _gameScreenManager.SetGameScreen += GameScreenManagerOnSetGameScreen;
+        }
+
+        private void OnDisable()
+        {
+            _gameScreenManager.SetGameScreen += GameScreenManagerOnSetGameScreen;
+        }
+
+        private void Start()
+        {
+            UpdateValues();
+        }
+
+        private void GameScreenManagerOnSetGameScreen(UIConfigurationStats pcConfig, MobileUIConfigurationStats mobileConfig)
+        {
+            SetUIConfiguration(pcConfig, mobileConfig);
+            UpdateValues();
+            
+        }
+
+        private void UpdateValues()
         {
             if (IsMobilePlatform())
             {
                 IsMobileUIActive = true;
-                pcUI.SetActive(false);
-                mobileUI.SetActive(true);
-                SetActiveUI(Screen.width > Screen.height ? mobileLandscapeUIConfig : mobilePortraitUIConfig);
+                _pcUI.SetActive(false);
+                _mobileUI.SetActive(true);
+                SetActiveUI(_mobileUIConfig);
             }
             else
             {
                 IsMobileUIActive = false;
-                mobileUI.SetActive(false);
-                pcUI.SetActive(true);
-                SetActiveUI(pcUIConfig);
+                _mobileUI.SetActive(false);
+                _pcUI.SetActive(true);
+                SetActiveUI(_pcUIConfig);
             }
         }
-        
-        private void Update()
+
+        public void SetUIConfiguration(UIConfigurationStats pcConfig, MobileUIConfigurationStats mobileConfig)
         {
-            if (!IsMobilePlatform())
-                return;
-            
-            if (_currentOrientation == Screen.orientation) 
-                return;
-            
-            _currentOrientation = Screen.orientation;
-            UpdateActiveUI();
-            OnOrientationChanged?.Invoke();
+            _pcUIConfig = pcConfig;
+            _mobileUIConfig = mobileConfig;
+
+            _pcUI = pcConfig.UIRoot;
+            _mobileUI = mobileConfig.UIRoot;
         }
         
         public UIConfigurationStats GetActiveUIConfiguration()
@@ -61,19 +76,16 @@ namespace Game
         private bool IsMobilePlatform()
             => Application.isMobilePlatform || forceMobileUIInEditor;
         
-        private void UpdateActiveUI()
-        {
-            SetActiveUI(Screen.width > Screen.height ? mobileLandscapeUIConfig : mobilePortraitUIConfig);
-        }
-        
         private void SetActiveUI(UIConfigurationStats config)
         {
-            pcUIConfig.UIRoot.gameObject.SetActive(false);
-            mobilePortraitUIConfig.UIRoot.gameObject.SetActive(false);
-            mobileLandscapeUIConfig.UIRoot.gameObject.SetActive(false);
+            _pcUIConfig.UIRoot.gameObject.SetActive(false);
+            _mobileUIConfig.UIRoot.gameObject.SetActive(false);
             
             config.UIRoot.gameObject.SetActive(true);
+            config.Timer.Initialize(_gameState);
             _activeUIConfig = config;
+            
+            SetActiveConfig?.Invoke();
         }
     }
 }

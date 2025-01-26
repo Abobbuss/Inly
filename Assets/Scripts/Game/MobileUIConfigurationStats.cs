@@ -1,5 +1,6 @@
 ﻿using Joystick;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Game
 {
@@ -8,8 +9,10 @@ namespace Game
     {
         [SerializeField] private CustomJoystick _movementJoystick;
         [SerializeField] private CustomJoystick _lookJoystick;
+        [SerializeField] private Button _jumpButton;
 
         public CustomJoystick MovementJoystick => _movementJoystick;
         public CustomJoystick LookJoystick => _lookJoystick;
+        public Button JumpButton => _jumpButton;
     }
 }
