@@ -7,6 +7,7 @@ namespace Game
         private int _currentTime;
         private int _totalBonuses;
         private float _averageBoost;
+        private int _totalTime;
 
         public int GetCurrentTime() 
             => _currentTime;
@@ -21,6 +22,14 @@ namespace Game
         {
             _currentTime = time;
         }
+        
+        public void SetTotalTime(int deltaTime)
+        {
+            _totalTime += deltaTime;
+        }
+        
+        public int GetTotalTime()
+            => _totalTime;
 
         public void SetBonuses(int bonuses, float average)
         {

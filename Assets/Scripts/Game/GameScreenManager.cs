@@ -1,16 +1,19 @@
 ﻿using System;
+using Game.Data;
+using Game.UI;
 using Player;
 using Timers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Game
 {
     public class GameScreenManager : MonoBehaviour
     {
         [Header("Screen Prefabs")]
-        [SerializeField] private UIConfigurationGameScene gameplayScreenPrefab;
-        [SerializeField] private GameObject pauseScreenPrefab;
-        [SerializeField] private GameObject gameOverScreenPrefab;
+        [SerializeField] private UIConfigurationGameScene _gameplayScreenPrefab;
+        [SerializeField] private GameObject _pauseScreenPrefab;
+        [SerializeField] private GameOverScreen _gameOverScreenPrefab;
 
         [SerializeField] private DeviceUIManager _deviceUIManager;
         [SerializeField] private PlayerStats _playerStats;
@@ -18,11 +21,18 @@ namespace Game
         
         private GameObject _currentScreen;
         private Timer _currentTimer;
+        private GameData _gameData;
+        private SaveManager _saveManager;
+        
+        public bool CanUsePause => _currentScreen != null && !_currentScreen.TryGetComponent<GameOverScreen>(out _);
 
         public event Action<UIConfigurationStats, MobileUIConfigurationStats> SetGameScreen;
 
         private void Awake()
         {
+            _saveManager = new SaveManager();
+            _gameData = _saveManager.Load();
+            
             ShowGameplayScreen();
             
             UIConfigurationGameScene currentGameScreen = _currentScreen.GetComponent<UIConfigurationGameScene>();
@@ -45,18 +55,18 @@ namespace Game
             Timer timer = activeUIConfiguration.Timer;
             _currentTimer = timer;
             
-            _currentTimer.TimeISOut += TimerOnTimeISOut;
+            _currentTimer.TimeIsOut += TimerOnTimeISOut;
         }
 
         private void TimerOnTimeISOut()
         {
             ShowGameOverScreen();
-            _currentTimer.TimeISOut -= TimerOnTimeISOut;
+            _currentTimer.TimeIsOut -= TimerOnTimeISOut;
         }
 
         public void ShowGameplayScreen()
         {
-            SwitchScreen(gameplayScreenPrefab.gameObject);
+            SwitchScreen(_gameplayScreenPrefab.gameObject);
             
             UIConfigurationGameScene currentGameScreen = _currentScreen.GetComponent<UIConfigurationGameScene>();
             SetGameScreen?.Invoke(currentGameScreen.PCConfig, currentGameScreen.MobileConfig);
@@ -64,18 +74,26 @@ namespace Game
 
         public void ShowPauseScreen()
         {
-            SwitchScreen(pauseScreenPrefab);
+            SwitchScreen(_pauseScreenPrefab);
         }
 
         public void ShowGameOverScreen()
         {
-            SwitchScreen(gameOverScreenPrefab);
+            if (_gameState.GetTotalTime() > _gameData.HighScore)
+            {
+                _gameData.HighScore = _gameState.GetTotalTime();
+                _saveManager.Save(_gameData);
+            }
+            
+            _gameOverScreenPrefab.SetHighScore(_gameData.HighScore);
+            _gameOverScreenPrefab.SetCurrentScore(_gameState.GetTotalTime());
+            
+            SwitchScreen(_gameOverScreenPrefab.gameObject);
         }
 
         private void SwitchScreen(GameObject screenPrefab)
         {
             bool isWasGameScreen = _currentScreen != null && _currentScreen.TryGetComponent<UIConfigurationGameScene>(out _);
-            bool isWillGameScreen = screenPrefab.TryGetComponent<UIConfigurationGameScene>(out _);
             
             if (isWasGameScreen)
                 SaveCurrentState();
@@ -85,9 +103,6 @@ namespace Game
             
             if (screenPrefab != null)
                 _currentScreen = Instantiate(screenPrefab, transform);
-            
-            if (isWillGameScreen)
-                RestoreState(screenPrefab);
         }
         
         private void SaveCurrentState()
@@ -95,11 +110,6 @@ namespace Game
             UIConfigurationStats uiConfig = _deviceUIManager.GetActiveUIConfiguration();
             _gameState.SetTime(uiConfig.Timer.GetCurrentTime());
             _gameState.SetBonuses(_playerStats.GetCountBonuses(), _playerStats.GetAverageBoost());
-        }
-
-        private void RestoreState(GameObject screen)
-        {
-            
         }
     }
 }
