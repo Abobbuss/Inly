@@ -7,6 +7,8 @@ namespace Timers
 {
     public class Timer : MonoBehaviour
     {
+        private GameState _gameState;
+        
         [Header("Timer Settings")]
         [SerializeField] private int _startTimeValue = 30;
         [SerializeField] private int _valueToAddTime = 5;
@@ -18,7 +20,7 @@ namespace Timers
         private float _internalTimer;
         private bool _isRunning;
 
-        public event Action TimeISOut;
+        public event Action TimeIsOut;
 
         private void Start()
         {
@@ -35,6 +37,8 @@ namespace Timers
             
             if (_internalTimer >= 1f)
             {
+                _gameState.SetTotalTime((int)_internalTimer);
+                
                 _currentTime--;
                 _internalTimer = 0f;
                 
@@ -47,8 +51,10 @@ namespace Timers
 
         public void Initialize(GameState gameState)
         {
-            if (gameState.GetCurrentTime() != 0)
-                _currentTime = gameState.GetCurrentTime();
+            _gameState = gameState;
+            
+            if (_gameState.GetCurrentTime() != 0)
+                _currentTime = _gameState.GetCurrentTime();
             
             UpdateTimerUI();
         }
@@ -73,7 +79,7 @@ namespace Timers
         private void OnGameOver()
         {
             _isRunning = false;
-            TimeISOut?.Invoke();
+            TimeIsOut?.Invoke();
         }
 
         private void UpdateTimerUI()

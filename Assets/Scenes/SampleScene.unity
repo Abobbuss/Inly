@@ -525,7 +525,7 @@ MonoBehaviour:
   bonusPrefab: {fileID: 5128959645880562478, guid: 6211821d4bd0a104b84105371d071df7, type: 3}
   minBonuses: 5
   maxBonuses: 10
-  spawnAreaRenderer: {fileID: 465566428}
+  _spawnAreaRenderer: {fileID: 465566428}
 --- !u!4 &1139331365
 Transform:
   m_ObjectHideFlags: 0
@@ -668,9 +668,12 @@ MonoBehaviour:
   _jumpHeight: 2
   _gravity: -9.81
   _lookSensitivity: 0.5
+  _maxLookAngle: 90
+  _minLookAngle: -90
   _cameraTransform: {fileID: 963194228}
   _deviceUIManager: {fileID: 2022465042}
   _gameScreenManager: {fileID: 2022465044}
+  _movementJoystick: {fileID: 0}
 --- !u!143 &1759311520
 CharacterController:
   m_ObjectHideFlags: 0
@@ -772,9 +775,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff6b95ec67a645f4b11691b3252e97ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameplayScreenPrefab: {fileID: 5617582269318196955, guid: c92f025bea0934847a82f53f39abbfd5, type: 3}
-  pauseScreenPrefab: {fileID: 3718650709103382300, guid: 4dc520b6137fffe47b57042a45fc3c92, type: 3}
-  gameOverScreenPrefab: {fileID: 6385658616082079937, guid: a01b7219cf859a5408b268d06a5b3ba8, type: 3}
+  _gameplayScreenPrefab: {fileID: 5617582269318196955, guid: c92f025bea0934847a82f53f39abbfd5, type: 3}
+  _pauseScreenPrefab: {fileID: 3718650709103382300, guid: 4dc520b6137fffe47b57042a45fc3c92, type: 3}
+  _gameOverScreenPrefab: {fileID: 8800788756057681496, guid: a01b7219cf859a5408b268d06a5b3ba8, type: 3}
   _deviceUIManager: {fileID: 2022465042}
   _playerStats: {fileID: 1759311521}
   _gameState: {fileID: 2022465045}

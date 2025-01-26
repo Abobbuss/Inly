@@ -1,19 +1,20 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Bonuses
 {
     public class BonusManager : MonoBehaviour
     {
         [Header("Bonus Settings")]
-        public Bonus bonusPrefab;
-        public int minBonuses = 5; 
-        public int maxBonuses = 10;
-
+        [SerializeField] private Bonus bonusPrefab;
+        [SerializeField] private int minBonuses = 5; 
+        [SerializeField] private int maxBonuses = 10;
+        
         [Header("Spawn Area Settings")]
-        [SerializeField] private Renderer spawnAreaRenderer;
+        [SerializeField] private Renderer _spawnAreaRenderer;
 
-        private List<Bonus> spawnedBonuses = new ();
+        private List<Bonus> _spawnedBonuses = new ();
 
         private void Start()
         {
@@ -22,7 +23,7 @@ namespace Bonuses
 
         private void SpawnBonuses()
         {
-            Vector3 spawnAreaSize = spawnAreaRenderer.bounds.size;
+            Vector3 spawnAreaSize = _spawnAreaRenderer.bounds.size;
         
             int bonusCount = Random.Range(minBonuses, maxBonuses + 1);
 
@@ -34,7 +35,7 @@ namespace Bonuses
                     Random.Range(-spawnAreaSize.z / 2, spawnAreaSize.z / 2)
                 );
             
-                spawnPosition += spawnAreaRenderer.transform.position;
+                spawnPosition += _spawnAreaRenderer.transform.position;
             
                 Bonus bonus = Instantiate(bonusPrefab, spawnPosition, Quaternion.identity).GetComponent<Bonus>();
 
@@ -42,7 +43,7 @@ namespace Bonuses
                 
                 if (bonusRenderer != null)
                 {
-                    spawnPosition.y = spawnAreaRenderer.transform.position.y + bonusRenderer.bounds.extents.y;
+                    spawnPosition.y = _spawnAreaRenderer.transform.position.y + bonusRenderer.bounds.extents.y;
                     bonus.transform.position = spawnPosition;
                 }
                 else
@@ -50,7 +51,7 @@ namespace Bonuses
                     Debug.LogError("Renderer is not found on the bonus prefab");
                 }
                 
-                spawnedBonuses.Add(bonus);
+                _spawnedBonuses.Add(bonus);
             }
         }
     }

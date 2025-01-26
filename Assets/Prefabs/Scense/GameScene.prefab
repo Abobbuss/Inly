@@ -1067,15 +1067,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _pcConfigurationStats:
-    uiRoot: {fileID: 8384809255399163290}
-    timer: {fileID: 6402046093667695540}
-    averageBoostText: {fileID: 8766458058674026202}
-    bonusCountText: {fileID: 6037728200551214087}
+    _uiRoot: {fileID: 8384809255399163290}
+    _timer: {fileID: 6402046093667695540}
+    _averageBoostText: {fileID: 8766458058674026202}
+    _bonusCountText: {fileID: 6037728200551214087}
   _moblileConfigurationStats:
-    uiRoot: {fileID: 4807984147356882926}
-    timer: {fileID: 635550675020396507}
-    averageBoostText: {fileID: 6043562962864658945}
-    bonusCountText: {fileID: 4913059460886044284}
+    _uiRoot: {fileID: 4807984147356882926}
+    _timer: {fileID: 635550675020396507}
+    _averageBoostText: {fileID: 6043562962864658945}
+    _bonusCountText: {fileID: 4913059460886044284}
     _movementJoystick: {fileID: 2394295811382444300}
     _lookJoystick: {fileID: 7282554235474384246}
     _jumpButton: {fileID: 3635735075884374979}

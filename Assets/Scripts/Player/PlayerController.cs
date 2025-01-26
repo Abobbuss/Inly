@@ -13,6 +13,8 @@ namespace Player
         
         [Header("Look Settings")]
         [SerializeField] private float _lookSensitivity = 0.5f;
+        [SerializeField] private float _maxLookAngle = 90f;
+        [SerializeField] private float _minLookAngle = -90f;
         
         [Header("References")]
         [SerializeField] private Transform _cameraTransform;
@@ -65,14 +67,7 @@ namespace Player
             _isMobile = _deviceUIManager.IsMobileUIActive;
 
             if (_isMobile)
-            {
                 SetUIButtons();
-            }
-            else
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;   
-            }
         }
 
         private void Update()
@@ -90,6 +85,9 @@ namespace Player
         
         private void TogglePause()
         {
+            if (!_gameScreenManager.CanUsePause)
+                return;
+            
             if (Time.timeScale == 0)
             {
                 Time.timeScale = 1;
@@ -144,7 +142,7 @@ namespace Player
             transform.Rotate(Vector3.up, lookX);
 
             cameraRotationX -= lookY;
-            cameraRotationX = Mathf.Clamp(cameraRotationX, -90f, 90f);
+            cameraRotationX = Mathf.Clamp(cameraRotationX, _minLookAngle, _maxLookAngle);
             _cameraTransform.localEulerAngles = new Vector3(cameraRotationX, 0f, 0f);
         }
 
@@ -168,7 +166,7 @@ namespace Player
         public void OnJumpButton()
         {
             if (_characterController.isGrounded)
-                verticalVelocity = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+                verticalVelocity = Mathf.Sqrt(_jumpHeight * -_jumpHeight * _gravity);
         }
         
         private void OnDestroy()
